@@ -1,0 +1,107 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Importing Data
+lifexp1 = pd.read_csv(r'C:\Users\JasonMassey\American Cancer Society\Daniel Wiese - FoodDeserts\NEW DATA\Lifexp1.dbf')
+
+# Descriptive Stats
+print(lifexp1.info())
+print(lifexp1['lifeexp'].value_counts())
+print(lifexp1['income'].value_counts())
+print(lifexp1['totpop'].value_counts())
+print(lifexp1['poverty'].value_counts())
+print(lifexp1['non_white'].value_counts())
+print(lifexp1['mrfei99'].value_counts())
+print(lifexp1['mrfei08'].value_counts())
+print(lifexp1['mrfei15'].value_counts())
+print(lifexp1['pcturban'].value_counts())
+print(lifexp1['edu'].value_counts())
+
+# Check Income / Poverty Mismatch
+print(lifexp1[lifexp1['poverty'] < 5]['income'].value_counts())
+print(lifexp1[lifexp1['poverty'] > 95]['income'].value_counts())
+print(lifexp1[lifexp1['income'] < 5]['poverty'].value_counts())
+
+# Delete Missing/Invalid Outcome or Covariate Values
+lifexp2 = lifexp1.dropna(subset=['lifeexp', 'income', 'poverty', 'non_white', 'edu', 'pcturban', 'state'])
+lifexp2 = lifexp2[(lifexp2['income'] != 0) & (lifexp2['income'] != 1)]
+lifexp2['pctrural'] = 1 - lifexp2['pcturban']
+lifexp2['wgts'] = lifexp2['totpop'] / 181821401
+
+# Histograms
+plt.figure(figsize=(10, 6))
+sns.histplot(lifexp2['lifeexp'], bins=30)
+plt.title('Histogram of Life Expectancy')
+plt.show()
+
+sns.histplot(lifexp2['income'], bins=30)
+plt.title('Histogram of Income')
+plt.show()
+
+sns.histplot(lifexp2['poverty'], bins=30)
+plt.title('Histogram of Poverty')
+plt.show()
+
+sns.histplot(lifexp2['pcturban'], bins=30)
+plt.title('Histogram of Percent Urban')
+plt.show()
+
+sns.histplot(lifexp2['non_white'], bins=30)
+plt.title('Histogram of Non-White Population')
+plt.show()
+
+sns.histplot(lifexp2['edu'], bins=30)
+plt.title('Histogram of Education')
+plt.show()
+
+sns.histplot(lifexp2['popdensity'], bins=30)
+plt.title('Histogram of Population Density')
+plt.show()
+
+sns.histplot(lifexp2['areakm'], bins=30)
+plt.title('Histogram of Area (km)')
+plt.show()
+
+# Correlation
+correlation_matrix = lifexp2[['lifeexp', 'LATractsVe', 'mrfei', 'mrfei08', 'mrfei99', 'RFEI', 'wRFEI', 
+                                'ff_density', 'gf_density', 'ff_capita', 'gf_capita', 
+                                'income', 'poverty', 'pcturban', 'non_white', 'edu', 
+                                'popdensity', 'areakm']].corr()
+print(correlation_matrix)
+
+# Create Datasets for measures
+mRFEI99 = lifexp2.dropna(subset=['mrfei99']).copy()
+mRFEI99['wgt'] = mRFEI99['totpop'] / 179027117
+
+mRFEI20 = lifexp2.dropna(subset=['mrfei_20']).copy()
+mRFEI20['wgt'] = mRFEI20['totpop'] / 179146448
+
+mRFEI08 = lifexp2.dropna(subset=['mrfei08']).copy()
+mRFEI08['wgt'] = mRFEI08['totpop'] / 180807540
+
+mRFEI15 = lifexp2.dropna(subset=['mrfei']).copy()
+mRFEI15['wgt'] = mRFEI15['totpop'] / 181100179
+
+mRFEI15_r = lifexp2.dropna(subset=['mrfei']).copy()
+mRFEI15_r['desert'] = np.where(mRFEI15_r['mrfei'] == 0, 1, 0)
+mRFEI15_r['swamp'] = np.where((mRFEI15_r['mrfei'] > 0) & (mRFEI15_r['mrfei'] <= 9.09), 1, 0)
+mRFEI15_r['good'] = np.where(mRFEI15_r['mrfei'] > 9.09, 1, 0)
+mRFEI15_r['wgt'] = mRFEI15_r['totpop'] / 181100179
+
+mRFEI15_r2 = lifexp2.dropna(subset=['mrfei']).copy()
+mRFEI15_r2 = mRFEI15_r2[(mRFEI15_r2['poverty'] > 20) & (mRFEI15_r2['uric_code'] == 1) & (mRFEI15_r2['non_white'] > 26.6)]
+mRFEI15_r2['wgt'] = mRFEI15_r2['totpop'] / 26317318
+
+mRFEI15_r3 = lifexp2.dropna(subset=['mrfei']).copy()
+mRFEI15_r3['swamp'] = np.where((mRFEI15_r3['mrfei'] > 0) & (mRFEI15_r3['mrfei'] <= 13), 1, 0)
+mRFEI15_r3 = mRFEI15_r3[(mRFEI15_r3['edu'] > 42.9) & (mRFEI15_r3['non_white'] > 26.6)]
+mRFEI15_r3['wgt'] = mRFEI15_r3['totpop'] / 58356020
+
+# LILACT
+lifexp2['LILACT2'] = lifexp2['LILACT'].map({'LILA': 1, 'HILA': 2, 'LIHA': 3, 'HIHA': 4})
+lifexp2['LILA'] = np.where(lifexp2['LILACT'] == 'LILA', 1, 0)
+lifexp2['HILA'] = np.where(lifexp2['LILACT'] == 'HILA', 1, 0)
+lifexp2['LIHA'] = np.where(lifexp2['LILACT'] == 'LIHA', 1, 0)
+
