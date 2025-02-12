@@ -1,0 +1,65 @@
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
+# Assuming idaho_ice_analysis is a pandas DataFrame
+
+# Checking Stage Counts of ICE Income State Quintiles
+
+# All Cancers; Total
+total_stage_counts = idaho_ice_analysis['stage'].value_counts()
+
+# Local
+local_stage_counts = idaho_ice_analysis[idaho_ice_analysis['stage'] == 1]['inc_qnS'].value_counts()
+
+# Regional
+regional_stage_counts = idaho_ice_analysis[idaho_ice_analysis['stage'] == 2]['inc_qnS'].value_counts()
+
+# Distant
+distant_stage_counts = idaho_ice_analysis[idaho_ice_analysis['stage'] == 3]['inc_qnS'].value_counts()
+
+def counts(cancer_type):
+    # Local
+    local_counts = idaho_ice_analysis[(idaho_ice_analysis['stage'] == 1) & 
+                                       (idaho_ice_analysis['cancertype'] == cancer_type) & 
+                                       (idaho_ice_analysis['ruca'] == 1)]['inc_qnS'].value_counts()
+
+    # Regional
+    regional_counts = idaho_ice_analysis[(idaho_ice_analysis['stage'] == 2) & 
+                                          (idaho_ice_analysis['cancertype'] == cancer_type) & 
+                                          (idaho_ice_analysis['ruca'] == 1)]['inc_qnS'].value_counts()
+
+    # Distant
+    distant_counts = idaho_ice_analysis[(idaho_ice_analysis['stage'] == 3) & 
+                                         (idaho_ice_analysis['cancertype'] == cancer_type) & 
+                                         (idaho_ice_analysis['ruca'] == 1)]['inc_qnS'].value_counts()
+
+    return local_counts, regional_counts, distant_counts
+
+# Cancer Types Counts
+counts("BC")
+counts("CRC")
+counts("LB")
+counts("PR")
+counts("CV")
+
+# Multinomial / Polytomous Logistic Regression
+def quintiles2(exp, cov1, cov2, cov3, cov4, cov5, cov6):
+    formula = f'stage2 ~ {exp} + {cov1} + {cov2} + {cov3} + {cov4} + {cov5} + {cov6}'
+    
+    # Model for all
+    model_all = smf.logit(formula, data=idaho_ice_analysis.query('ruca == 1')).fit()
+    
+    # Model for specific cancer types
+    for cancer_type in ["BC", "CRC", "LB", "PR", "CV"]:
+        model_cancer = smf.logit(formula, data=idaho_ice_analysis.query(f'cancertype == "{cancer_type}" and ruca == 1')).fit()
+
+# Frequency counts for ethrace, marital, insurance
+ethrace_counts = idaho_ice_analysis['ethrace'].value_counts()
+marital_counts = idaho_ice_analysis['marital'].value_counts()
+insurance_counts = idaho_ice_analysis['insurance'].value_counts()
+
+# State Quintiles
+# INC
+quintiles2('exp', 'cov1', 'cov2', 'cov3', 'cov4', 'cov5', 'cov6')
+
