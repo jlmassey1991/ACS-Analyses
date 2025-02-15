@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Importing Data
-lifexp1 = pd.read_csv(r'C:\Users\JasonMassey\American Cancer Society\Daniel Wiese - FoodDeserts\NEW DATA\Lifexp1.dbf')
+lifexp1 = pd.read_csv(r'XXXX.dbf')
 
 # Descriptive Stats
 print(lifexp1.info())
